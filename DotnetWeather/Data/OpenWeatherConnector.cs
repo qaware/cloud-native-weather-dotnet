@@ -19,7 +19,6 @@ public class OpenWeatherConnector
     public async Task<List<Weather>> GetWeather(string lat, string lon)
     {
         string url = $"{WeatherCallUrl}?lat={lat}&lon={lon}&units=metric&appid={ApiKey}";
-        Console.WriteLine(url);
         List<Weather> list = new List<Weather>();
         HttpResponseMessage response = await client.GetAsync(url);
         if (response.IsSuccessStatusCode)
@@ -30,15 +29,13 @@ public class OpenWeatherConnector
             {
                 Weather w = new Weather();
                 DateTime dt = DateTime.UnixEpoch.AddSeconds(weatherData.GetProperty("dt").GetInt32());
-                if (dt.Hour !=  15)
+                if (dt.Hour ==  15 || (dt.Date == DateTime.Today && list.Count == 0))
                 {
-                    continue;
+                    w.Date = dt.Date;
+                    w.Temperature = (int) weatherData.GetProperty("main").GetProperty("temp").GetDouble();
+                    w.WeatherType = WeatherTypeFromCode(weatherData.GetProperty("weather").EnumerateArray().First().GetProperty("id").GetInt32());
+                    list.Add(w);
                 }
-                w.Date = dt.Date;
-                w.Temperature = (int) weatherData.GetProperty("main").GetProperty("temp").GetDouble();
-                w.WeatherType = WeatherTypeFromCode(weatherData.GetProperty("weather").EnumerateArray().First().GetProperty("id").GetInt32());
-                list.Add(w);
-                Console.WriteLine("new weather: " + w.ToString() + w.Date);
             }
         }
 

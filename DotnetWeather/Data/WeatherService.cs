@@ -1,5 +1,7 @@
 using DotnetWeather.Models;
-using System.Data.Entity.Migrations;
+using Microsoft.EntityFrameworkCore;
+using Polly;
+using Polly.Retry;
 
 namespace DotnetWeather.Data;
 
@@ -9,8 +11,48 @@ public class WeatherService
     public static OpenWeatherConnector OpenWeatherConnector;
     
     private Random rnd = new Random();
+    private AsyncPolicy _policy;
+
+    public WeatherService()
+    {
+        var timeoutPolicy = Policy
+            .TimeoutAsync(
+                TimeSpan.FromSeconds(5), // _settings.TimeoutWhenCallingApi,
+                Polly.Timeout.TimeoutStrategy.Pessimistic,
+                onTimeoutAsync: (_, __, ___, ____) =>
+                {
+                    Console.WriteLine("Timeout has occurred");
+                    return Task.CompletedTask;
+                }
+            );
+        
+        var circuitBreakerPolicy = Policy.Handle<Exception>()
+            .CircuitBreakerAsync(3, TimeSpan.FromMinutes(1),
+                (ex, t) =>
+                {
+                    Console.WriteLine("Circuit broken!");
+                },
+                () =>
+                {
+                    Console.WriteLine("Circuit Reset!");
+                });
+
+        _policy = circuitBreakerPolicy.WrapAsync(timeoutPolicy);
+    }
 
     public async Task<Weather?> GetWeather(City city, DateTime date)
+    {
+        try
+        {
+            return await _policy.ExecuteAsync(async () => await _getWeather(city, date));
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
+    }
+    
+    private async Task<Weather?> _getWeather(City city, DateTime date)
     {
         Weather? weather = await WeatherContext.Weather.FindAsync(city.Id, date);
         if (weather == null)
@@ -30,12 +72,12 @@ public class WeatherService
                     foundWeather.WeatherType = w.WeatherType;
                     WeatherContext.Weather.Update(foundWeather);
                 }
+
                 if (w.Date == date)
                 {
                     weather = w;
                 }
             }
-
             await WeatherContext.SaveChangesAsync();
         }
 
@@ -44,7 +86,18 @@ public class WeatherService
 
     public async Task<City?> GetCityFromName(string cityName)
     {
-        City? city = WeatherContext.City.FirstOrDefault(c => c.Name.Equals(cityName));
+        try
+        {
+            return await _policy.ExecuteAsync(async () => await _getCityFromName(cityName));
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
+    }
+    private async Task<City?> _getCityFromName(string cityName)
+    {
+        City? city = await WeatherContext.City.FirstOrDefaultAsync(c => c.Name.Equals(cityName));
         
         if (city == null) // if city not in database
         {
@@ -63,10 +116,22 @@ public class WeatherService
         return city;
     }
 
-    public List<City> GetAlternatives(string cityName)
+    public async Task<List<City>?> GetAlternatives(string cityName)
+    {
+        try
+        {
+            return await _policy.ExecuteAsync(async () => await _getAlternatives(cityName));
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
+    }
+    
+    private async Task<List<City>> _getAlternatives(string cityName)
     {
         HashSet<City> cities = new HashSet<City>();
-        if (WeatherContext.City.Any())
+        if (await WeatherContext.City.AnyAsync())
         {
             for (int i = 0; i < 6; i++)
             {

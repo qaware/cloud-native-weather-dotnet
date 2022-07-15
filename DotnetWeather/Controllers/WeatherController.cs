@@ -21,7 +21,7 @@ public class WeatherController : Controller
         {
             dateT = DateTime.Today;
         }
-        if (cityName == "")
+        if (cityName == "" || cityName == null)
         {
             cityName = "Munich";
         }
@@ -32,15 +32,24 @@ public class WeatherController : Controller
             return new RedirectToActionResult("CityNotFound", "Weather", new {city=cityName});
         }
 
-        Weather? weather = await _service.GetWeather(city, dateT) ?? Weather.GetNotAvailable(city.Id, dateT);
+        Weather weather = await _service.GetWeather(city, dateT) ?? Weather.GetNotAvailable(city.Id, dateT);
         return View(new WeatherViewModel {City = city, Weather = weather});
     }
     
-    public IActionResult CityNotFound(string city)
+    public async Task<IActionResult> CityNotFound(string city)
     {
-        List<City> alternatives = _service.GetAlternatives(city);
+        List<City>? alternatives = await _service.GetAlternatives(city);
+        if (alternatives == null)
+        {
+            return new RedirectToActionResult("ServiceNotAvailable", "Weather", new{});
+        }
         City fake = new City {Name = city, SimilarCities = alternatives};
         return View(fake);
+    }
+    
+    public IActionResult ServiceNotAvailable()
+    {
+        return View();
     }
 
 }
