@@ -21,7 +21,7 @@ public class Program
             )
         );
 
-        builder.Services.AddScoped<NeedsDatabase>();
+        builder.Services.AddScoped<WeatherService>();
 
         // Add services to the container.
         builder.Services.AddControllersWithViews();
@@ -32,8 +32,12 @@ public class Program
         {
             var services = scope.ServiceProvider;
 
-            CreateDbIfNotExists(services);
+            var context = services.GetRequiredService<DotnetWeatherContext>();
+            context.Database.EnsureCreated();
         }
+
+        WeatherService.OpenWeatherConnector = new OpenWeatherConnector(app.Configuration);
+        WeatherService.WeatherContext = app.Services.CreateScope().ServiceProvider.GetRequiredService<DotnetWeatherContext>();
 
         // Configure the HTTP request pipeline.
         if (!app.Environment.IsDevelopment())
@@ -54,19 +58,5 @@ public class Program
             pattern: "{controller=Home}/{action=Index}/{id?}");
 
         app.Run();
-    }
-    
-    private static void CreateDbIfNotExists(IServiceProvider services)
-    {
-        try
-        {
-            var context = services.GetRequiredService<DotnetWeatherContext>();
-            DbSeed.Seed(context);
-        }
-        catch (Exception ex)
-        {
-            var logger = services.GetRequiredService<ILogger<Program>>();
-            logger.LogError(ex, "An error occurred creating the DB.");
-        }
     }
 }
