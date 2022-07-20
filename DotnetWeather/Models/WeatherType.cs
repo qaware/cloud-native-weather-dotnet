@@ -47,4 +47,9 @@ public class WeatherType
         allTypes.Remove(WeatherType.NOT_AVAILABLE);
         return allTypes;
     }
+
+    public override string ToString()
+    {
+        return Name;
+    }
 }

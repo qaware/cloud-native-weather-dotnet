@@ -10,7 +10,7 @@ docker_build(
 # k8s_yaml(['k8s/base/dotnet-weather-config.yaml', 'k8s/base/dotnet-weather-deployment.yaml', 'k8s/base/dotnet-weather-service.yaml'])
 # apply files separately, or with kustomize
 
-k8s_yaml(kustomize('k8s/overlays/dev'))
+k8s_yaml(kustomize('k8s/overlays/prod'))
 
 # k8s_resource('dotnet-weather', port_forwards='8080:8080')
 # port is already exposed by the service LoadBalancer

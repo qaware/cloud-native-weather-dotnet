@@ -4,11 +4,11 @@
 }
 <h1>@Model.Name not found!</h1>
 
-<p>Did you mean one of the following cities?</p>
+<p>You can try one of the following cities:</p>
 
 <p><ul>
     @foreach (var alt in Model.SimilarCities)
     {
-        <li><a href="/Weather?cityId=@alt.Id&day=0">@alt.Name</a></li>
+        <li><a href="/Weather?cityName=@alt.Name&date=@DateTime.Today.ToString("yyyy-MM-dd")">@alt.Name</a></li>
     }
 </ul></p>
