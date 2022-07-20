@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace DotnetWeather.Controllers;
-
 public class WeatherController : Controller
 {
     private readonly WeatherService _service;
@@ -50,6 +49,24 @@ public class WeatherController : Controller
     public IActionResult ServiceNotAvailable()
     {
         return View();
+    }
+
+    [Route("api/weather")]
+    public async Task<string> SimpleApi(string city)
+    {
+        City? c = await _service.GetCityFromName(city);
+        if (c == null)
+        {
+            return $"City {city} not found!";
+        }
+
+        Weather? weather = await _service.GetWeather(c, DateTime.Today);
+        if (weather == null)
+        {
+            return $"Weather for {city} not found!";
+        }
+
+        return $"The weather in {city} is {weather.WeatherType.Name} today!";
     }
 
 }
