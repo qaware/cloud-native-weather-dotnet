@@ -7,16 +7,18 @@ namespace DotnetWeather.Data;
 
 public class WeatherService
 {
-    public static DotnetWeatherContext WeatherContext;
-    public static OpenWeatherConnector OpenWeatherConnector;
+    private DotnetWeatherContext _weatherContext;
+    private IOpenWeatherConnector _openWeatherConnector;
     
     private Random rnd = new Random();
     private AsyncPolicy _policy;
     private ILogger<WeatherService> _logger;
 
-    public WeatherService(ILogger<WeatherService> logger)
+    public WeatherService(ILogger<WeatherService> logger, DotnetWeatherContext context, IOpenWeatherConnector connector)
     {
         _logger = logger;
+        _weatherContext = context;
+        _openWeatherConnector = connector;
         
         var timeoutPolicy = Policy
             .TimeoutAsync(
@@ -54,39 +56,34 @@ public class WeatherService
             _logger.LogError(e, "Exception in GetWeather");
             return null;
         }
-        finally
-        {
-            await WeatherContext.Database.CloseConnectionAsync();
-        }
     }
     
     private async Task<Weather?> _getWeather(City city, DateTime date)
     {
-        await WeatherContext.Database.EnsureCreatedAsync();
-        Weather? weather = await WeatherContext.Weather.FindAsync(city.Id, date);
+        Weather? weather = await _weatherContext.Weather.FindAsync(city.Id, date);
         if (weather == null)
         {
-            var weathers = await OpenWeatherConnector.GetWeather(city.Lat.ToString(), city.Lon.ToString());
+            var weathers = await _openWeatherConnector.GetWeather(city.Lat.ToString(), city.Lon.ToString());
             foreach (Weather w in weathers)
             {
                 w.CityId = city.Id;
-                Weather? foundWeather = await WeatherContext.Weather.FindAsync(w.CityId, w.Date);
-                if (foundWeather == null)
+                Weather? foundWeather = await _weatherContext.Weather.FindAsync(w.CityId, w.Date);
+                if (foundWeather == null) // no weather for this date
                 {
-                    WeatherContext.Weather.Add(w);
+                    _weatherContext.Weather.Add(w);
                 }
-                else
+                else // weather for this date already exists but was updated longer ago
                 {
                     foundWeather.Temperature = w.Temperature;
                     foundWeather.WeatherType = w.WeatherType;
-                    WeatherContext.Weather.Update(foundWeather);
+                    _weatherContext.Weather.Update(foundWeather);
                 }
 
-                if (w.Date == date)
+                if (w.Date == date.Date) // weather is what we want to return
                 {
                     weather = w;
                 }
-                await WeatherContext.SaveChangesAsync();
+                await _weatherContext.SaveChangesAsync();
             }
         }
 
@@ -104,23 +101,18 @@ public class WeatherService
             _logger.LogError(e, "Exception in GetCityFromName");
             return null;
         }
-        finally
-        {
-            await WeatherContext.Database.CloseConnectionAsync();
-        }
     }
     private async Task<City?> _getCityFromName(string cityName)
     {
-        await WeatherContext.Database.EnsureCreatedAsync();
-        City? city = await WeatherContext.City.FirstOrDefaultAsync(c => c.Name.Equals(cityName));
+        City? city = await _weatherContext.City.FirstOrDefaultAsync(c => c.Name.Equals(cityName));
         
         if (city == null) // if city not in database
         {
-            city = await OpenWeatherConnector.GetCity(cityName);
+            city = await _openWeatherConnector.GetCity(cityName);
             if (city != null)
             {
-                city = WeatherContext.City.Add(city).Entity;
-                await WeatherContext.SaveChangesAsync();
+                city = _weatherContext.City.Add(city).Entity;
+                await _weatherContext.SaveChangesAsync();
             }
             else
             {
@@ -142,22 +134,17 @@ public class WeatherService
             _logger.LogError(e, "Exception in GetAlternatives");
             return null;
         }
-        finally
-        {
-            await WeatherContext.Database.CloseConnectionAsync();
-        }
     }
     
     private async Task<List<City>> _getAlternatives(string cityName)
     {
-        await WeatherContext.Database.EnsureCreatedAsync();
         HashSet<City> cities = new HashSet<City>();
-        if (await WeatherContext.City.AnyAsync())
+        if (await _weatherContext.City.AnyAsync())
         {
             for (int i = 0; i < 6; i++)
             {
-                var skip = (int)(rnd.NextDouble() * WeatherContext.City.Count());
-                City c = WeatherContext.City.OrderBy(c => c.Name).Skip(skip).First();
+                var skip = (int)(rnd.NextDouble() * _weatherContext.City.Count());
+                City c = _weatherContext.City.OrderBy(c => c.Name).Skip(skip).First();
                 cities.Add(c);
             }
         }

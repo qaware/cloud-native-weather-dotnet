@@ -1,12 +1,41 @@
+using DotnetWeather.Controllers;
 using DotnetWeather.Data;
 using DotnetWeather.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace DotnetWeatherTest;
 
 public static class Utils
 {
-    public static DotnetWeatherContext GetDatabaseContext()
+    public static WeatherController GetWeatherController()
+    {
+        var context = GetSeededDatabaseContext();
+        var connector = new MockOpenWeather();
+        var logger = new Logger<WeatherService>(LoggerFactory.Create(builder =>
+            builder.AddSystemdConsole(options =>
+            {
+                options.IncludeScopes = true;
+                options.TimestampFormat = "hh:mm:ss ";
+            })));
+        var service = new WeatherService(logger, context, connector);
+        var weatherController = new WeatherController(service);
+        return weatherController;
+    }
+    
+    public static DotnetWeatherContext GetEmptyDatabaseContext()
+    {
+        var options = new DbContextOptionsBuilder<DotnetWeatherContext>()
+            .UseInMemoryDatabase(databaseName: "MockDatabase")
+            .Options;
+
+        var context = new DotnetWeatherContext(options);
+        context.Database.EnsureCreated();
+
+        return context;
+    }
+    
+    public static DotnetWeatherContext GetSeededDatabaseContext()
     {
         var options = new DbContextOptionsBuilder<DotnetWeatherContext>()
             .UseInMemoryDatabase(databaseName: "MockDatabase")
@@ -47,8 +76,8 @@ public static class Utils
         List<WeatherType> weatherTypes = WeatherType.GetAllWeatherTypes();
         for (int i = 1; i <= cities.Length; i++)
         {
-            List<DateTime> dates = Enumerable.Range(1, DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month))
-                .Select(day => new DateTime(DateTime.Now.Year, DateTime.Now.Month, day)).ToList();
+            List<DateTime> dates = Enumerable.Range(1, DateTime.DaysInMonth(2022, 7))
+                .Select(day => new DateTime(2022, 7, day)).ToList();
             foreach (var date in dates)
             {
                 Weather w = new Weather

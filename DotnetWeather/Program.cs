@@ -22,6 +22,7 @@ public class Program
         );
 
         builder.Services.AddScoped<WeatherService>();
+        builder.Services.AddScoped<OpenWeatherConnector>();
 
         // Add services to the container.
         builder.Services.AddControllersWithViews();
@@ -35,9 +36,6 @@ public class Program
             var context = services.GetRequiredService<DotnetWeatherContext>();
             context.Database.EnsureCreated();
         }
-
-        WeatherService.OpenWeatherConnector = new OpenWeatherConnector(app.Configuration);
-        WeatherService.WeatherContext = app.Services.CreateScope().ServiceProvider.GetRequiredService<DotnetWeatherContext>();
 
         // Configure the HTTP request pipeline.
         if (!app.Environment.IsDevelopment())

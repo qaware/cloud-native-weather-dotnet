@@ -3,7 +3,7 @@ using DotnetWeather.Models;
 
 namespace DotnetWeather.Data;
 
-public class OpenWeatherConnector
+public class OpenWeatherConnector : IOpenWeatherConnector
 {
     private HttpClient client = new HttpClient();
     private string WeatherCallUrl = "https://api.openweathermap.org/data/2.5/forecast";

@@ -16,7 +16,7 @@ public class WeatherController : Controller
     public async Task<IActionResult> Index(string cityName, string date)
     {
         if (!DateTime.TryParseExact(date, "yyyy-MM-dd", null, 
-                System.Globalization.DateTimeStyles.AssumeUniversal, out DateTime dateT))
+                System.Globalization.DateTimeStyles.NoCurrentDateDefault, out DateTime dateT))
         {
             dateT = DateTime.Today;
         }
