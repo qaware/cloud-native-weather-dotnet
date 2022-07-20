@@ -12,16 +12,19 @@ public class WeatherService
     
     private Random rnd = new Random();
     private AsyncPolicy _policy;
+    private ILogger<WeatherService> _logger;
 
-    public WeatherService()
+    public WeatherService(ILogger<WeatherService> logger)
     {
+        _logger = logger;
+        
         var timeoutPolicy = Policy
             .TimeoutAsync(
                 TimeSpan.FromSeconds(5), // _settings.TimeoutWhenCallingApi,
                 Polly.Timeout.TimeoutStrategy.Pessimistic,
                 onTimeoutAsync: (_, __, ___, ____) =>
                 {
-                    Console.WriteLine("Timeout has occurred");
+                    _logger.LogInformation("Timeout has occurred");
                     return Task.CompletedTask;
                 }
             );
@@ -30,11 +33,11 @@ public class WeatherService
             .CircuitBreakerAsync(3, TimeSpan.FromMinutes(1),
                 (ex, t) =>
                 {
-                    Console.WriteLine("Circuit broken!");
+                    _logger.LogInformation("Circuit broken!");
                 },
                 () =>
                 {
-                    Console.WriteLine("Circuit Reset!");
+                    _logger.LogInformation("Circuit Reset!");
                 });
 
         _policy = circuitBreakerPolicy.WrapAsync(timeoutPolicy);
@@ -48,12 +51,18 @@ public class WeatherService
         }
         catch (Exception e)
         {
+            _logger.LogError(e, "Exception in GetWeather");
             return null;
+        }
+        finally
+        {
+            await WeatherContext.Database.CloseConnectionAsync();
         }
     }
     
     private async Task<Weather?> _getWeather(City city, DateTime date)
     {
+        await WeatherContext.Database.EnsureCreatedAsync();
         Weather? weather = await WeatherContext.Weather.FindAsync(city.Id, date);
         if (weather == null)
         {
@@ -77,8 +86,8 @@ public class WeatherService
                 {
                     weather = w;
                 }
+                await WeatherContext.SaveChangesAsync();
             }
-            await WeatherContext.SaveChangesAsync();
         }
 
         return weather;
@@ -92,11 +101,17 @@ public class WeatherService
         }
         catch (Exception e)
         {
+            _logger.LogError(e, "Exception in GetCityFromName");
             return null;
+        }
+        finally
+        {
+            await WeatherContext.Database.CloseConnectionAsync();
         }
     }
     private async Task<City?> _getCityFromName(string cityName)
     {
+        await WeatherContext.Database.EnsureCreatedAsync();
         City? city = await WeatherContext.City.FirstOrDefaultAsync(c => c.Name.Equals(cityName));
         
         if (city == null) // if city not in database
@@ -124,12 +139,18 @@ public class WeatherService
         }
         catch (Exception e)
         {
+            _logger.LogError(e, "Exception in GetAlternatives");
             return null;
+        }
+        finally
+        {
+            await WeatherContext.Database.CloseConnectionAsync();
         }
     }
     
     private async Task<List<City>> _getAlternatives(string cityName)
     {
+        await WeatherContext.Database.EnsureCreatedAsync();
         HashSet<City> cities = new HashSet<City>();
         if (await WeatherContext.City.AnyAsync())
         {
