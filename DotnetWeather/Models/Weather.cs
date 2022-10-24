@@ -8,10 +8,10 @@ public class Weather
     [DataType(DataType.Date)]
     public DateTime Date { get; set; }
     public WeatherType WeatherType { get; set; }
-    public int? Temperature { get; set; }
+    public double Temperature { get; set; }
 
     public static Weather GetNotAvailable(int cityId, DateTime date)
     {
-        return new Weather{CityId = cityId, Date = date, WeatherType = WeatherType.NOT_AVAILABLE, Temperature = null};
+        return new Weather{CityId = cityId, Date = date, WeatherType = WeatherType.NOT_AVAILABLE, Temperature = 0.0};
     }
 }

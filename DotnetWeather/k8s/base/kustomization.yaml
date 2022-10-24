@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+commonLabels:
+  app: weather-service
+  framework: dotnet
+
+buildMetadata: [managedByLabel]
+
+resources:
+  - microservice-service.yaml
+  - microservice-deployment.yaml
+
+secretGenerator:
+  - name: microservice-secrets
+    literals:
+      - ConnectionStrings__DefaultConnection= Data source=weather-database,1433;Database=master;User Id=sa;Password=ChangeMe;

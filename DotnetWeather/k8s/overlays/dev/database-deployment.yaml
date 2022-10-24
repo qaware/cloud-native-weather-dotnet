@@ -1,28 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: weather-database
   labels:
-    app: sqldata
-  name: sqldata
+    type: database
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: sqldata
+      type: database
   template:
     metadata:
       labels:
-        weather-network: "true"
-        app: sqldata
+        type: database
     spec:
       containers:
-        - envFrom:
-            - configMapRef:
-                name: db-config
+        - name: sqldata        
           image: mcr.microsoft.com/mssql/server
-          name: sqldata
+          imagePullPolicy: "IfNotPresent"
           ports:
             - containerPort: 1433
-          resources: {}
-      restartPolicy: Always
-status: {}
+          envFrom:
+            - secretRef:
+                name: database-secrets

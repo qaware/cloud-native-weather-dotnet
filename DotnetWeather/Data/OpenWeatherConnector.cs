@@ -32,7 +32,7 @@ public class OpenWeatherConnector : IOpenWeatherConnector
                 if (dt.Hour ==  15 || (dt.Date == DateTime.Today && list.Count == 0))
                 {
                     w.Date = dt.Date;
-                    w.Temperature = (int) weatherData.GetProperty("main").GetProperty("temp").GetDouble();
+                    w.Temperature = weatherData.GetProperty("main").GetProperty("temp").GetDouble();
                     w.WeatherType = WeatherTypeFromCode(weatherData.GetProperty("weather").EnumerateArray().First().GetProperty("id").GetInt32());
                     list.Add(w);
                 }

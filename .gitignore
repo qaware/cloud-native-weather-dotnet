@@ -5,6 +5,7 @@ build/
 
 .idea/
 .vscode/
+.vs/
 .project
 .classpath
 
