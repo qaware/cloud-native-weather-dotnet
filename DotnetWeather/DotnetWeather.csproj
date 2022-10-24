@@ -8,12 +8,47 @@
 
   <ItemGroup>
     <PackageReference Include="EntityFramework" Version="6.4.4" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.5">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.10">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.10" />
     <PackageReference Include="Polly" Version="7.2.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="k8s\flux\kustomization.yaml" />
+    <None Remove="k8s\flux\weather-policy.yaml" />
+    <None Remove="k8s\flux\weather-kustomization.yaml" />
+    <None Remove="k8s\flux\weather-source.yaml" />
+    <None Remove="k8s\flux\weather-registry.yaml" />
+    <None Remove="k8s\overlays\prod\kustomization.yaml" />
+    <None Remove="k8s\overlays\prod\db-config.yaml" />
+    <None Remove="k8s\overlays\prod\dotnet-weather-config.yaml" />
+    <None Remove="k8s\overlays\prod\dotnet-weather-service.yaml" />
+    <None Remove="k8s\overlays\dev\kustomization.yaml" />
+    <None Remove="k8s\overlays\dev\db-service.yaml" />
+    <None Remove="k8s\overlays\dev\db-config.yaml" />
+    <None Remove="k8s\overlays\dev\dotnet-weather-config.yaml" />
+    <None Remove="k8s\overlays\dev\dotnet-weather-service.yaml" />
+    <None Remove="k8s\base\weather-networkpolicy.yaml" />
+    <None Remove="k8s\base\kustomization.yaml" />
+    <None Remove="k8s\base\db-service.yaml" />
+    <None Remove="k8s\base\db-deployment.yaml" />
+    <None Remove="k8s\base\db-config.yaml" />
+    <None Remove="k8s\base\dotnet-weather-deployment.yaml" />
+    <None Remove="k8s\base\dotnet-weather-config.yaml" />
+    <None Remove="k8s\base\dotnet-weather-service.yaml" />
+    <None Remove="Dockerfile" />
+    <None Remove="k8s\overlays\dev\db-deployment.yaml" />
+    <None Remove="k8s\flux\weather-kustomization.yaml" />
+    <None Remove="k8s\base\kustomization.yaml" />
+    <None Remove="k8s\base\microservice-deployment.yaml" />
+    <None Remove="k8s\base\microservice-service.yaml" />
+    <None Remove="k8s\overlays\dev\kustomization.yaml" />
+    <None Remove="k8s\overlays\dev\database-service.yaml" />
+    <None Remove="k8s\overlays\prod\kustomization.yaml" />
+    <None Remove="k8s\overlays\prod\2-replicas.yaml" />
+    <None Remove="k8s\overlays\prod\loadbalancer.yaml" />
+  </ItemGroup>
 </Project>

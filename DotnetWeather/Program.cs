@@ -1,6 +1,5 @@
 using DotnetWeather.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace DotnetWeather;
 
@@ -27,6 +26,8 @@ public class Program
         // Add services to the container.
         builder.Services.AddControllersWithViews();
 
+        builder.Services.AddHealthChecks();
+
         var app = builder.Build();
 
         using (var scope = app.Services.CreateScope())
@@ -50,6 +51,8 @@ public class Program
         app.UseRouting();
 
         app.UseAuthorization();
+
+        app.MapHealthChecks("/healthz");
 
         app.MapControllerRoute(
             name: "default",

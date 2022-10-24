@@ -7,7 +7,7 @@ public class MockOpenWeather : IOpenWeatherConnector
 {
     public Task<List<Weather>> GetWeather(string lat, string lon)
     {
-        Weather w = new Weather{Date = DateTime.Today, Temperature = 25, WeatherType = WeatherType.SUNNY};
+        Weather w = new Weather{Date = DateTime.Today, Temperature = 25.0, WeatherType = WeatherType.SUNNY};
         return Task.FromResult(new List<Weather> {w});
     }
 

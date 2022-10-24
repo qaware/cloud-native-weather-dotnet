@@ -1,16 +1,11 @@
-version_settings(constraint='>=0.22.2')
+# -*- mode: Python -*-
+# allow_k8s_contexts('rancher-desktop')
+# version_settings(constraint='>=0.22.2')
 
-docker_build(
-    'dotnet-weather',
-    '.',
-    dockerfile='Dockerfile'
-)
+# to disable push with rancher desktop we need to use custom_build instead of docker_build
+# docker_build('cloud-native-weather-dotnet', './DotnetWeather/', dockerfile='./DotnetWeather/Dockerfile')
+custom_build('cloud-native-weather-dotnet', 'docker build -t $EXPECTED_REF ./DotnetWeather/', ['./DotnetWeather/'], disable_push=True)
 
-# k8s_yaml(['k8s/base/db-config.yaml', 'k8s/base/db-deployment.yaml', 'k8s/base/db-service.yaml'])
-# k8s_yaml(['k8s/base/dotnet-weather-config.yaml', 'k8s/base/dotnet-weather-deployment.yaml', 'k8s/base/dotnet-weather-service.yaml'])
-# apply files separately, or with kustomize
-
-k8s_yaml(kustomize('k8s/overlays/prod'))
-
-# k8s_resource('dotnet-weather', port_forwards='8080:8080')
-# port is already exposed by the service LoadBalancer
+k8s_yaml(kustomize('DotnetWeather/k8s/overlays/dev'))
+k8s_resource(workload='weather-service', port_forwards=[port_forward(18080, 8080, 'HTTP API')], labels=['Dotnet'])
+k8s_resource(workload='weather-database', port_forwards=[port_forward(11433, 1433, 'SQL API')])
