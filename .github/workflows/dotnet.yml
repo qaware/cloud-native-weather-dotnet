@@ -1,4 +1,4 @@
-name: Test Dotnet Weather
+name: Build and Test
 
 on:
   workflow_dispatch:
